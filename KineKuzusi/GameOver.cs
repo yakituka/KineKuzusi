@@ -94,11 +94,14 @@ namespace KineKuzusi
 
         private void Draw(object sender, PaintEventArgs e)
         {
-            e.Graphics.DrawString("記録 : " + score.ToString(), new Font("HGSSoeiKakupoptai Regular", 70), Brushes.CadetBlue, Width / 5, Height / 20);
+            e.Graphics.DrawString("あなたの得点", new Font("HGSSoeiKakupoptai Regular", 70), Brushes.CadetBlue, Width / 5, Height * 1 / 5);
+            e.Graphics.DrawString(score.ToString(), new Font("HGSSoeiKakupoptai Regular", 70), Brushes.MediumVioletRed, Width *15/ 50, Height * 2 / 5);
 
-            for (int i = 0; i < (intRanking.Count < 8 ? intRanking.Count : 8); i++)
+
+            e.Graphics.DrawString("ランキング", new Font("HGSSoeiKakupoptai Regular", 70), Brushes.CadetBlue, (float)(Width / 1.5), Height/20);
+            for (int i = 1; i <= (intRanking.Count < 8 ? intRanking.Count : 8); i++)
             {
-                e.Graphics.DrawString((i+1).ToString()+"位"+" : " + intRanking[i].ToString(), new Font("HGSSoeiKakupoptai Regular", 70), Brushes.CadetBlue, (float)(Width/1.5), Height / 20 * (i*20/10 + 1));
+                e.Graphics.DrawString(i.ToString()+"位"+" : " + intRanking[i-1].ToString(), new Font("HGSSoeiKakupoptai Regular", 70), Brushes.CadetBlue, (float)(Width/1.5), Height / 20 * (i*2 + 1));
             }
         }
     }

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.SuspendLayout();
             // 
             // GameOver
             // 

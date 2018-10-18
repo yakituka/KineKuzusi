@@ -53,18 +53,18 @@ namespace KineKuzusi
 
             blocks = new Blocks(
                      new Rectangle(Width / 8, Height / 20, Width / 10, Height / 20),
-                     new Vector(0, 0),
-                     6,
+                     new Vector(1, 1),
+                     8,
                      4,
-                     new int[4, 6] { { 3, 2, 3, 2, 3, 2},
-                                     { 2, 3, 2, 3, 2, 3},
-                                     { 1, 2, 1, 2, 1, 2},
-                                     { 2, 1, 2, 1, 2, 1}
+                     new int[4, 8] { { 3, 2, 3, 2, 3, 2, 3, 2},
+                                     { 2, 3, 2, 3, 2, 3, 1, 2},
+                                     { 1, 2, 1, 2, 1, 2, 3, 1},
+                                     { 2, 1, 2, 1, 2, 1, 3, 1}
                                    }
             );
 
-            leftWall = new Rectangle(0, 0, Width / 18, Height);
-            rightWall = new Rectangle(Width - Width / 18, 0, Width / 18, Height);
+            leftWall = new Rectangle(0, 0, Width / 17, Height);
+            rightWall = new Rectangle(Width - Width / 17, 0, Width / 17, Height);
 
             try
             {
@@ -156,7 +156,7 @@ namespace KineKuzusi
 
                             //ブロックをウィンドウサイズに合わせる
                             blocks.Size = new Rectangle(Width / 8, Height / 20, Width / 10, Height / 20);
-                            blocks.BlockInterval = new Vector(Width / 40, Height / 20);
+                            blocks.BlockInterval = new Vector(5, 5);
 
                             //球と壁との衝突を判定する
                             if (ball.Position.X + ball.Radius > rightWall.Left) ball.ReverseSpeedX();
