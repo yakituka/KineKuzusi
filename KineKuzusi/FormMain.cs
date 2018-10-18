@@ -19,7 +19,7 @@ namespace KineKuzusi
     {
         public static GameMain gameMain;
         public static GameOver gameOver;
-        public static Panel panel;
+        private static Panel panel;
 
         //コンストラクタ
         public FormMain()
@@ -32,7 +32,7 @@ namespace KineKuzusi
         }
 
         //ゲーム画面を作成し表示する
-        public static void CreateGameMain()
+        private static void CreateGameMain()
         {
             //GameMainの登録
             gameMain = new GameMain();
@@ -43,7 +43,7 @@ namespace KineKuzusi
         }
 
         //ゲームオーバー画面を作成し表示する
-        public static void CreateGameOver()
+        private static void CreateGameOver()
         {
             gameOver = new GameOver();
             gameOver.Disposed += new EventHandler(gameOver_disposed);
