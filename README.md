@@ -1,5 +1,4 @@
 # KineKuzusi
-Kinectを用いたブロック崩しゲーム「KineKuzusi」の開発履歴となるリポジトリ
 
 /// ゲームの遊び方 ///
 1. KineKuzui.slnをVisual Studioで開きます。
