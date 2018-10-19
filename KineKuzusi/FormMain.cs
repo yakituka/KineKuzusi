@@ -24,22 +24,30 @@ namespace KineKuzusi
         //コンストラクタ
         public FormMain()
         {
+            //初期化処理
             InitializeComponent();
+            WindowState =  FormWindowState.Maximized;
+            FormBorderStyle = FormBorderStyle.None;
             panel = panel1;
-            File.Create(@"Scores.csv");
+            if (File.Exists(@"Scores.csv")) File.Delete(@"Scores.csv");
 
-            CreateGameMain();
+            CreateGameOver();
         }
 
         //ゲーム画面を作成し表示する
         private static void CreateGameMain()
         {
-            //GameMainの登録
             gameMain = new GameMain();
             gameMain.Disposed += new EventHandler(gameMain_disposed);
             panel.Controls.Add(gameMain);
             gameMain.Dock = DockStyle.Fill;
             gameMain.Visible = true;
+
+            /*
+            WMPLib.WindowsMediaPlayer mediaPlayer = new WMPLib.WindowsMediaPlayer();
+            mediaPlayer.URL = @"background_music.mp3";
+            mediaPlayer.controls.play();
+            */
         }
 
         //ゲームオーバー画面を作成し表示する
@@ -56,6 +64,8 @@ namespace KineKuzusi
         private static void gameMain_disposed(object sender, EventArgs e)
         {
             //MessageBox.Show("GameMain was dead! Creating GameOver ...");
+            panel.Controls.Remove(gameMain);
+            gameMain.Disposed -= new EventHandler(gameMain_disposed);
             CreateGameOver();
         }
 
@@ -63,6 +73,8 @@ namespace KineKuzusi
         private static void gameOver_disposed(object sender, EventArgs e)
         {
             //MessageBox.Show("GameOver was dead! Creating GameMain ...");
+            panel.Controls.Remove(gameOver);
+            gameOver.Disposed -= new EventHandler(gameOver_disposed);
             CreateGameMain();
         }
     }

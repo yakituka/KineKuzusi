@@ -19,6 +19,10 @@ namespace KineKuzusi
     {
         //グローバル変数群
         bool once = true;
+        bool ballLaunched = false;
+        int durabilityStart;
+        int durabilityEnd;
+        int scoreCounter;
         Paddle paddle;
         Ball ball;
         public static Blocks blocks;
@@ -26,9 +30,12 @@ namespace KineKuzusi
         Rectangle rightWall;
 
         Timer timer = new Timer();
+        Timer speedUpTimer = new Timer();
+        Timer ballLaunchTimer = new Timer();
+
         Tools tools = new Tools();
 
-        SwipeGestureDetector swipeDetector = new SwipeGestureDetector();
+        //SwipeGestureDetector swipeDetector = new SwipeGestureDetector();
 
         //コンストラクタ
         public GameMain()
@@ -38,7 +45,7 @@ namespace KineKuzusi
             //グローバル変数の初期化
             paddle = new Paddle(
                      new SolidBrush(Color.DimGray),
-                     new Rectangle(Width / 2, Height * 8 / 10, Width / 8, Height / 20),
+                     new Rectangle(Width / 2, Height * 9 / 10, Width / 8, Height / 80),
                      Width / 7,
                      Width / 3
             );
@@ -46,25 +53,23 @@ namespace KineKuzusi
             ball = new Ball(
                    new SolidBrush(Color.HotPink),
                    new Vector(Width / 2 + Width / 16, Height * 8 / 10 - Height / 20),
-                   new Vector(Width / 50, Height / 50),
+                   new Vector(0,0),
                    Height / 40,
                    false
             );
 
             blocks = new Blocks(
-                     new Rectangle(Width / 8, Height / 20, Width / 10, Height / 20),
-                     new Vector(1, 1),
-                     8,
+                     new Rectangle(Width / 3, Height / 20, Width / 10, Height / 20),
+                     new Vector(0, 0),
+                     5,
                      4,
-                     new int[4, 8] { { 3, 2, 3, 2, 3, 2, 3, 2},
-                                     { 2, 3, 2, 3, 2, 3, 1, 2},
-                                     { 1, 2, 1, 2, 1, 2, 3, 1},
-                                     { 2, 1, 2, 1, 2, 1, 3, 1}
-                                   }
+                     tools.ArrayRandomize(5*4, 1, 4)
             );
 
-            leftWall = new Rectangle(0, 0, Width / 17, Height);
-            rightWall = new Rectangle(Width - Width / 17, 0, Width / 17, Height);
+            durabilityStart = tools.ElementSum(blocks.DurabilityArray, blocks.Column, blocks.Row);
+
+            leftWall = new Rectangle(0, 0, Width / 10, Height);
+            rightWall = new Rectangle(Width * 9 / 10, 0, Width / 10, Height);
 
             try
             {
@@ -74,7 +79,6 @@ namespace KineKuzusi
                 }
 
                 StartKinect(KinectSensor.KinectSensors[0]);
-
             }
             catch (Exception ex)
             {
@@ -96,9 +100,17 @@ namespace KineKuzusi
             kinect.SkeletonStream.Enable();
             kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(skeleton_update);
 
-            timer.Interval = 5000;
+            timer.Interval = 3000;
             timer.Tick += new EventHandler(timer_event);
 
+            speedUpTimer.Interval = 5000;
+            speedUpTimer.Tick += new EventHandler(speed_up_event);
+            speedUpTimer.Enabled = true;
+
+            ballLaunchTimer.Interval = 5000;
+            ballLaunchTimer.Tick += new EventHandler(ball_launch_event);
+            ballLaunchTimer.Enabled = true;
+                
             kinect.Start();
         }
 
@@ -108,8 +120,10 @@ namespace KineKuzusi
 
             KinectSensor kinect = sender as KinectSensor;
 
-            Form f = FindForm();
-            if(f != null) f.SetDesktopBounds(0, 0, 1920, 1080);
+
+            //Form fm = FindForm();
+            //if (fm != null) fm.SetDesktopBounds(0, 0, 1920, 1080);
+
 
             //ジョイント座標の更新
             using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
@@ -122,97 +136,126 @@ namespace KineKuzusi
                     {
                         Joint handLeft = skeleton.Joints[JointType.HandLeft];
                         Joint handRight = skeleton.Joints[JointType.HandRight];
+                        Joint spine = skeleton.Joints[JointType.Spine];
 
                         if (skeleton.TrackingState == SkeletonTrackingState.Tracked
                             && handLeft.TrackingState == JointTrackingState.Tracked
-                            && handRight.TrackingState == JointTrackingState.Tracked)
+                            && handRight.TrackingState == JointTrackingState.Tracked
+                            && spine.TrackingState == JointTrackingState.Tracked)
                         {
 
-                            swipeDetector.Add(handRight.Position, kinect);
+                            //swipeDetector.Add(handRight.Position, kinect);
 
                             //RGB画像の座標への変換
-                            ColorImagePoint rightHandPos = KinectSensor.KinectSensors[0].CoordinateMapper.MapSkeletonPointToColorPoint(handRight.Position, KinectSensor.KinectSensors[0].ColorStream.Format);
-                            ColorImagePoint leftHandPos = KinectSensor.KinectSensors[0].CoordinateMapper.MapSkeletonPointToColorPoint(handLeft.Position, KinectSensor.KinectSensors[0].ColorStream.Format);
+                            var coordinateMapper = KinectSensor.KinectSensors[0].CoordinateMapper;
+                            ColorImagePoint rightHandPos = coordinateMapper.MapSkeletonPointToColorPoint(handRight.Position, KinectSensor.KinectSensors[0].ColorStream.Format);
+                            ColorImagePoint leftHandPos = coordinateMapper.MapSkeletonPointToColorPoint(handLeft.Position, KinectSensor.KinectSensors[0].ColorStream.Format);
+                            ColorImagePoint spinePos = coordinateMapper.MapSkeletonPointToColorPoint(spine.Position, KinectSensor.KinectSensors[0].ColorStream.Format);
 
-                            paddle.Size = new Rectangle(leftHandPos.X * Width / 640, Height * 8 / 10, (rightHandPos.X - leftHandPos.X) * Width / 640, Height / 20);
-                            if ((rightHandPos.X - leftHandPos.X) * Width / 640 < paddle.MinimumWidth)
+                            int leftdiff = leftHandPos.X - spinePos.X;
+                            int rightdiff = rightHandPos.X - spinePos.X;
+                            int center = spinePos.X;
+
+                            if (-leftdiff < paddle.MinimumWidth / 5)
                             {
-                                paddle.ReSizeWidth(paddle.MinimumWidth);
+                                leftdiff = -paddle.MinimumWidth / 5;
                             }
-                            else if ((rightHandPos.X - leftHandPos.X) * Width / 640 > paddle.MaximumWidth)
+                            else if (-leftdiff > paddle.MaximumWidth / 5)
                             {
-                                paddle.ReSizeWidth(paddle.MaximumWidth);
-                            }
-
-                            //ボールをウィンドウサイズに合わせる
-                            //ball.SetSpeed(Bounds.X / 50, Bounds.Y / 50);
-                            ball.Radius = Height / 40;
-                            paddle.MinimumWidth = Width / 7;
-                            paddle.MaximumWidth = Width / 3;
-
-                            //壁をウィンドウサイズに合わせる
-                            leftWall = new Rectangle(0, 0, Width / 18, Height);
-                            rightWall = new Rectangle(Width - Width / 18, 0, Width / 18, Height);
-
-                            //ブロックをウィンドウサイズに合わせる
-                            blocks.Size = new Rectangle(Width / 8, Height / 20, Width / 10, Height / 20);
-                            blocks.BlockInterval = new Vector(5, 5);
-
-                            //球と壁との衝突を判定する
-                            if (ball.Position.X + ball.Radius > rightWall.Left) ball.ReverseSpeedX();
-                            if (ball.Position.X - ball.Radius < leftWall.Right) ball.ReverseSpeedX();
-                            if (ball.Position.Y + ball.Radius <= 0) ball.ReverseSpeedY();
-
-                            //球と画面下の衝突を判定する
-                            if(ball.Position.Y + ball.Radius >= Height && once)
-                            {
-                                once = false;
-                                int score =
-                                    100 * tools.ElementEqualCount(0, blocks.DurabilityMatrix, blocks.Column, blocks.Row)/*+
-                                    50 * tools.ElementEqualCount(1, blocks.DurabilityMatrix, blocks.Column, blocks.Row)+
-                                    25 * tools.ElementEqualCount(2, blocks.DurabilityMatrix, blocks.Column, blocks.Row)+
-                                    10 * tools.ElementEqualCount(3, blocks.DurabilityMatrix, blocks.Column, blocks.Row)*/
-                                ;
-                                File.AppendAllText(@"Scores.csv", score.ToString()+",");
-                                Dispose();
+                                leftdiff = -paddle.MaximumWidth / 5;
                             }
 
-                            //球の移動
-                            ball.Position += ball.Speed;
+                            if (rightdiff < paddle.MinimumWidth / 5)
+                            {
+                                rightdiff = paddle.MinimumWidth / 5;
+                            }
+                            else if (rightdiff > paddle.MaximumWidth / 5)
+                            {
+                                rightdiff = paddle.MaximumWidth / 5;
+                            }
+
+                            paddle.Size = new Rectangle( (center + leftdiff) * Width / 640, Height * 9 / 10, (-leftdiff + rightdiff) * Width / 640, Height / 80);
                         }
                     }
                 }
             }
 
+
+            //ボールをウィンドウサイズに合わせる
+            if (!ballLaunched)
+            {
+                ball.Speed = new Vector(0, 0);
+                ball.Position = new Vector(paddle.Size.X + paddle.Size.Width / 2, paddle.Size.Y - ball.Radius);
+            }
+            //ball.SetSpeed(Bounds.X / 50, Bounds.Y / 50);
+            ball.Radius = Height / 40;
+            paddle.MinimumWidth = Width / 7;
+            paddle.MaximumWidth = Width / 3;
+
+            //壁をウィンドウサイズに合わせる
+            leftWall = new Rectangle(0, 0, Width / 10, Height);
+            rightWall = new Rectangle(Width * 9 / 10, 0, Width / 10, Height);
+
+            //ブロックをウィンドウサイズに合わせる
+            blocks.Size = new Rectangle(Width / 5, Height / 20, Width / 10, Height / 20);
+            blocks.BlockInterval = new Vector(5, 5);
+
+            //球と壁との衝突を判定する
+            if (ball.Position.X + ball.Radius > rightWall.Left) ball.ReverseSpeedX();
+            if (ball.Position.X - ball.Radius < leftWall.Right) ball.ReverseSpeedX();
+            if (ball.Position.Y + ball.Radius <= 0) ball.ReverseSpeedY();
+
+            //球と画面下の衝突を判定する
+            if (ball.Position.Y + ball.Radius >= Height && once)
+            {
+                once = false;
+                durabilityEnd = tools.ElementSum(blocks.DurabilityArray, blocks.Column, blocks.Row);
+                int score = scoreCounter * 100;
+                string date = DateTime.Now.ToString("HH時mm分");
+                File.AppendAllText(@"Scores.csv", score.ToString() + "#" + date + ",");
+                Dispose();
+            }
+
+            //球の移動
+            ball.Position += ball.Speed;
+
+            //全消ししたら復活する
+            if (blocks.DurabilityArray.All(s => s == 0)) { blocks.DurabilityArray = tools.ArrayRandomize(5*4, 1, 4);}
+
             //球とパドルの当たり判定
-            if (tools.IsCollisionPaddle(new Vector(paddle.Size.X, paddle.Size.Y), new Vector(paddle.Size.X + paddle.Size.Width, paddle.Size.Y), ball.Position, ball.Radius))
+            if (tools.IsCollisionBase(new Vector(paddle.Size.X, paddle.Size.Y), new Vector(paddle.Size.X + paddle.Size.Width, paddle.Size.Y), ball.Position, ball.Radius))
             {
                 if (paddle.Size.Width < Width / 5)
                 {
                     timer.Enabled = true;
                     ball.Brush = new SolidBrush(Color.Purple);
-                    ball.IsPenetrated = true;
+                    ball.IsDoubleDamaged = true;
                 }
-                ball.ReverseSpeedY();
+                ball.Speed = tools.BallReflection(new Vector(paddle.Size.X, paddle.Size.Y), new Vector(paddle.Size.X + paddle.Size.Width, paddle.Size.Y), ball.Position, ball.Radius, paddle.Size, ball.Speed);
             }
 
-            //球とプロックの当たり判定
+            //球とブロックの当たり判定
             for (int i = 0; i < blocks.Column; i++)
             {
                 for (int j = 0; j < blocks.Row; j++)
                 {
-                    if (blocks.DurabilityMatrix[i, j] != 0)
+                    int x = j * blocks.Column + i;
+                    if (blocks.DurabilityArray[x] > 0)
                     {
                         int collision = tools.IsCollisionBlock(blocks.BlockPosition(j, i), ball);
                         if (collision == 1 || collision == 2)
                         {
-                            if (!ball.IsPenetrated) ball.ReverseSpeedY();
-                            blocks.DurabilityMatrix[i, j]--;
+                            if (ball.IsDoubleDamaged) { blocks.DurabilityArray[x]--; scoreCounter++; } 
+                            blocks.DurabilityArray[x]--; scoreCounter++;
+
+                            ball.ReverseSpeedY();
                         }
                         else if (collision == 3 || collision == 4)
                         {
-                            if (!ball.IsPenetrated) ball.ReverseSpeedX();
-                            blocks.DurabilityMatrix[i, j]--;
+                            if (ball.IsDoubleDamaged) { blocks.DurabilityArray[x]--; scoreCounter++; }
+                            blocks.DurabilityArray[x]--; scoreCounter++;
+
+                            ball.ReverseSpeedX();
                         }
                     }
                 }
@@ -224,15 +267,39 @@ namespace KineKuzusi
             else
                 paddle.Brush = new SolidBrush(Color.DimGray);
 
+            //壁とパドルの当たり判定
+            if (leftWall.Width >= paddle.Size.X)
+            {
+                int x = paddle.Size.X;
+                x = leftWall.Width;
+            }
+            else if(rightWall.X <= paddle.Size.Right)
+            {
+                int y = paddle.Size.Y;
+                y = rightWall.X;
+            }
+
             //Drawの再描画
             Invalidate();
         }
 
+        private void speed_up_event(object sender, EventArgs e)
+        {
+            ball.Speed *= 1.1;
+        }
+
+        private void ball_launch_event(object sender, EventArgs e)
+        {
+            ballLaunched = true;
+            ball.Speed = tools.VectorRandomize(new Vector(Width / 80, Height / 80));
+            ballLaunchTimer.Enabled = false;
+        }
+        
         //タイマーが経過した
         private void timer_event(object sender, EventArgs e)
         {
             ball.Brush = new SolidBrush(Color.HotPink);
-            ball.IsPenetrated = false;
+            ball.IsDoubleDamaged = false;
             timer.Enabled = false;
         }
 
@@ -251,19 +318,29 @@ namespace KineKuzusi
             //壁の配置
             e.Graphics.FillRectangle(new SolidBrush(Color.LightGray), leftWall);
             e.Graphics.FillRectangle(new SolidBrush(Color.LightGray), rightWall);
-            
+
+            //スコアの描画
+            e.Graphics.DrawString(scoreCounter.ToString(),
+                new Font("HGSSoeiKakupoptai Regular", 70),
+                Brushes.DarkKhaki,
+                Width*9/10,
+                Height/10
+                );
 
             //ブロックの描画
             for (int i = 0; i < blocks.Column; i++)
             {
                 for (int j = 0; j < blocks.Row; j++)
                 {
-                    if (blocks.DurabilityMatrix[i, j] >= 3)
-                        e.Graphics.FillRectangle(new SolidBrush(Color.DarkBlue), blocks.BlockPosition(j, i));
-                    else if (blocks.DurabilityMatrix[i, j] == 2)
-                        e.Graphics.FillRectangle(new SolidBrush(Color.Blue), blocks.BlockPosition(j, i));
-                    else if (blocks.DurabilityMatrix[i, j] == 1)
-                        e.Graphics.FillRectangle(new SolidBrush(Color.LightBlue), blocks.BlockPosition(j, i));
+                    int x = j * blocks.Column + i;
+                    if (blocks.DurabilityArray[x] >= 4)
+                        e.Graphics.FillRectangle(new SolidBrush(Color.Violet), blocks.BlockPosition(j, i));
+                    else if (blocks.DurabilityArray[x] == 3)
+                        e.Graphics.FillRectangle(new SolidBrush(Color.Red), blocks.BlockPosition(j, i));
+                    else if (blocks.DurabilityArray[x] == 2)
+                        e.Graphics.FillRectangle(new SolidBrush(Color.Yellow), blocks.BlockPosition(j, i));
+                    else if (blocks.DurabilityArray[x] == 1)
+                        e.Graphics.FillRectangle(new SolidBrush(Color.Green), blocks.BlockPosition(j, i));
                 }
             }
 
@@ -275,7 +352,7 @@ namespace KineKuzusi
             public Vector Position { get; set; }
             public Vector Speed { get; set; }
             public int Radius { get; set; }
-            public bool IsPenetrated { get; set; }
+            public bool IsDoubleDamaged { get; set; }
 
             public Ball(SolidBrush brush, Vector position, Vector speed, int radius, bool isPenetrated)
             {
@@ -283,7 +360,7 @@ namespace KineKuzusi
                 Position = position;
                 Speed = speed;
                 Radius = radius;
-                IsPenetrated = isPenetrated;
+                IsDoubleDamaged = isPenetrated;
             }
 
             public void ReverseSpeedX()
@@ -311,11 +388,6 @@ namespace KineKuzusi
                 MinimumWidth = minimum;
                 MaximumWidth = maximum;
             }
-
-            public void ReSizeWidth(int PaddleWidth)
-            {
-                Size = new Rectangle(Size.X, Size.Y, PaddleWidth, Size.Height);
-            }
         }
 
         public class Blocks
@@ -324,15 +396,15 @@ namespace KineKuzusi
             public Vector BlockInterval { get; set; }
             public int Row { get; set; }
             public int Column { get; set; }
-            public int[,] DurabilityMatrix { get; set; }
+            public int[] DurabilityArray { get; set; }
 
-            public Blocks(Rectangle size, Vector blockInterval, int row, int column, int[,] durabilityMatrix)
+            public Blocks(Rectangle size, Vector blockInterval, int row, int column, int[] durabilityArray)
             {
                 Size = size;
                 BlockInterval = blockInterval;
                 Row = row;
                 Column = column;
-                DurabilityMatrix = durabilityMatrix;
+                DurabilityArray = durabilityArray;
             }
             public Rectangle BlockPosition(int row, int column)
             {
