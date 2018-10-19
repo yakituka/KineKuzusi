@@ -211,8 +211,9 @@ namespace KineKuzusi
                 once = false;
                 durabilityEnd = tools.ElementSum(blocks.DurabilityArray, blocks.Column, blocks.Row);
                 int score = scoreCounter * 100;
-                string date = DateTime.Now.ToString("HH時mm分");
-                File.AppendAllText(@"Scores.csv", score.ToString() + "#" + date + ",");
+                DateTime date = DateTime.Now;
+                string dateString = date.ToString("HH:mm");
+                File.AppendAllText(@"Scores.csv", score.ToString() + "A" + dateString + ",");
                 Dispose();
             }
 

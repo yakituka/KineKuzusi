@@ -16,9 +16,9 @@ namespace KineKuzusi
 {
     public partial class GameOver : UserControl
     {
-        int score;
-        List<string> scoreRanking = new List<string>();
-        List<int> intScoreRanking = new List<int>();
+        Score scoreLast;
+
+        List<Score> scores = new List<Score>();
 
         bool once = true;
         Tools tools = new Tools();
@@ -32,13 +32,25 @@ namespace KineKuzusi
 
             if (File.Exists(@"Scores.csv"))
             {
-                scoreRanking.AddRange(File.ReadAllText(@"Scores.csv").Split(','));
-                scoreRanking.RemoveAll(s => s == "");
+                //スコアリストに代入
+                foreach(string r in File.ReadAllText(@"Scores.csv").Split(','))
+                {
+                    String[] splited = r.Split('A');
+                    if (splited.Length == 2)
+                    {
+                        Console.WriteLine("DEBUGGER : " + splited.Length);
+                        Score score = new Score(splited[0], splited[1]);
+                        scores.Add(score);
+                    }
+                }
 
-                intScoreRanking = scoreRanking.ConvertAll(s => int.Parse(s));
+                //直前のスコアを代入
+                scoreLast = scores[scores.Count - 1];
+                //空文字が入っているデータは消す
+                scores.RemoveAll(s => s.score == "");
 
-                score = intScoreRanking[intScoreRanking.Count - 1];
-                intScoreRanking.Sort(); intScoreRanking.Reverse();
+                //ソートする
+                scores.Sort((a, b) => int.Parse(b.score) - int.Parse(a.score));
             }
 
             try
@@ -118,20 +130,31 @@ namespace KineKuzusi
             if (File.Exists(@"Scores.csv"))
             {
                 e.Graphics.DrawString("あなたの得点", font, Brushes.CadetBlue, Width / 5, Height * 1 / 5);
-                e.Graphics.DrawString(score.ToString(), font, Brushes.MediumVioletRed, Width * 15 / 50, Height * 2 / 5);
+                e.Graphics.DrawString(scoreLast.score, font, Brushes.MediumVioletRed, Width * 15 / 50, Height * 2 / 5);
 
                 e.Graphics.DrawString("ランキング", font, Brushes.CadetBlue, (float)(Width / 1.5), Height / 20);
-                for (int i = 1; i <= (intScoreRanking.Count < 8 ? intScoreRanking.Count : 8); i++)
+                for (int i = 1; i <= (scores.Count < 8 ? scores.Count : 8); i++)
                 {
                     DateTime dateTime = DateTime.Now;
-                    string date = dateTime.ToString("HH時mm分");
-                    e.Graphics.DrawString(date+" "+i.ToString() + "位" + " : " + intScoreRanking[i - 1].ToString(), font, Brushes.CadetBlue, (float)(Width / 2), Height / 20 * (i * 2 + 1));
+                    e.Graphics.DrawString(scores[i-1].date+" "+i.ToString() + "位" + " : " + scores[i-1].score, font, Brushes.CadetBlue, (float)(Width / 2), Height / 20 * (i * 2 + 1));
                 }
             }
             //初回起動時
             else
             {
                 e.Graphics.DrawString("右手を横に振ってください", font, Brushes.DimGray, Width/4, Height/2);
+            }
+        }
+
+        private class Score
+        {
+            public string score { get; set; }
+            public string date { get; set; }
+
+            public Score(string s, string d)
+            {
+                score = s;
+                date = d;
             }
         }
     }
