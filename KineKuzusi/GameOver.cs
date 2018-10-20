@@ -52,6 +52,7 @@ namespace KineKuzusi
                 //ソートする
                 scores.Sort((a, b) => int.Parse(b.score) - int.Parse(a.score));
 
+                //操作禁止タイマーの発動
                 noControlTimer.Interval = 3000;
                 noControlTimer.Tick += new EventHandler(no_control_evnet);
                 noControlTimer.Enabled = true;
@@ -88,8 +89,8 @@ namespace KineKuzusi
 
         private void no_control_evnet(object sender, EventArgs e)
         {
-            noControlTimer.Enabled = false;
             noControl = false;
+            noControlTimer.Enabled = false;
         }
 
         private void StartKinect(KinectSensor kinect)
@@ -142,7 +143,9 @@ namespace KineKuzusi
             if (File.Exists(@"Scores.csv"))
             {
                 e.Graphics.DrawString("あなたの得点", font, Brushes.CadetBlue, Width / 5, Height * 1 / 5);
-                e.Graphics.DrawString(scoreLast.score, font, Brushes.MediumVioletRed, Width * 15 / 50, Height * 2 / 5);
+
+                int rank = scores.IndexOf(scoreLast)+1;
+                e.Graphics.DrawString(rank.ToString()+"位 : "+scoreLast.score, font, Brushes.MediumVioletRed, Width * 9 / 50, Height * 2 / 5);
 
                 e.Graphics.DrawString("右手を左右に降って\nゲームスタート!", font, Brushes.DimGray, Width / 15, Height *7/10);
 
