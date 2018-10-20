@@ -35,11 +35,10 @@ namespace KineKuzusi
                 //スコアリストに代入
                 foreach(string r in File.ReadAllText(@"Scores.csv").Split(','))
                 {
-                    String[] splited = r.Split('A');
-                    if (splited.Length == 2)
+                    String[] split = r.Split('A');
+                    if (split.Length == 2)
                     {
-                        Console.WriteLine("DEBUGGER : " + splited.Length);
-                        Score score = new Score(splited[0], splited[1]);
+                        Score score = new Score(split[0], split[1]);
                         scores.Add(score);
                     }
                 }
@@ -47,7 +46,7 @@ namespace KineKuzusi
                 //直前のスコアを代入
                 scoreLast = scores[scores.Count - 1];
                 //空文字が入っているデータは消す
-                scores.RemoveAll(s => s.score == "");
+                scores.RemoveAll(s => s.score == "" || s.date == "");
 
                 //ソートする
                 scores.Sort((a, b) => int.Parse(b.score) - int.Parse(a.score));
@@ -66,6 +65,8 @@ namespace KineKuzusi
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
+                Form f = FindForm();
+                if (f != null) f.Close();
             }
 
             swipeDetector.OnGestureDetected += new Action<string>(swipe_event);

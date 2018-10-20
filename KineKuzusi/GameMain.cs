@@ -20,8 +20,6 @@ namespace KineKuzusi
         //グローバル変数群
         bool once = true;
         bool ballLaunched = false;
-        int durabilityStart;
-        int durabilityEnd;
         int scoreCounter;
         Paddle paddle;
         Ball ball;
@@ -66,7 +64,6 @@ namespace KineKuzusi
                      tools.ArrayRandomize(5*4, 1, 4)
             );
 
-            durabilityStart = tools.ElementSum(blocks.DurabilityArray, blocks.Column, blocks.Row);
 
             leftWall = new Rectangle(0, 0, Width / 10, Height);
             rightWall = new Rectangle(Width * 9 / 10, 0, Width / 10, Height);
@@ -187,6 +184,7 @@ namespace KineKuzusi
                 ball.Speed = new Vector(0, 0);
                 ball.Position = new Vector(paddle.Size.X + paddle.Size.Width / 2, paddle.Size.Y - ball.Radius);
             }
+
             //ball.SetSpeed(Bounds.X / 50, Bounds.Y / 50);
             ball.Radius = Height / 40;
             paddle.MinimumWidth = Width / 7;
@@ -209,7 +207,6 @@ namespace KineKuzusi
             if (ball.Position.Y + ball.Radius >= Height && once)
             {
                 once = false;
-                durabilityEnd = tools.ElementSum(blocks.DurabilityArray, blocks.Column, blocks.Row);
                 int score = scoreCounter * 100;
                 DateTime date = DateTime.Now;
                 string dateString = date.ToString("HH:mm");
@@ -221,7 +218,7 @@ namespace KineKuzusi
             ball.Position += ball.Speed;
 
             //全消ししたら復活する
-            if (blocks.DurabilityArray.All(s => s == 0)) { blocks.DurabilityArray = tools.ArrayRandomize(5*4, 1, 4);}
+            if (blocks.DurabilityArray.All(s => s <= 0)) { blocks.DurabilityArray = tools.ArrayRandomize(5*4, 1, 5);}
 
             //球とパドルの当たり判定
             if (tools.IsCollisionBase(new Vector(paddle.Size.X, paddle.Size.Y), new Vector(paddle.Size.X + paddle.Size.Width, paddle.Size.Y), ball.Position, ball.Radius))
