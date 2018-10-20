@@ -109,7 +109,7 @@ namespace KineKuzusi
             kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(skeleton_update);
 
             //スワイプジェスチャーのイベント登録
-            //swipeDetector.OnGestureDetected += new Action<string>(swipe_event);
+            swipeDetector.OnGestureDetected += new Action<string>(swipe_event);
 
             kinect.Start();
         }
@@ -157,7 +157,8 @@ namespace KineKuzusi
                 for (int i = 1; i <= (scores.Count < 8 ? scores.Count : 8); i++)
                 {
                     DateTime dateTime = DateTime.Now;
-                    e.Graphics.DrawString(scores[i-1].date+" "+i.ToString() + "位" + " : " + scores[i-1].score, font, Brushes.CadetBlue, (float)(Width / 2 + Width/12), Height / 20 * (i * 2 + 1));
+                    Brush brushForRank = i == 1 ? Brushes.PaleVioletRed : Brushes.CadetBlue;
+                    e.Graphics.DrawString(i.ToString() + "位" + " : " + scores[i-1].score+ " "+scores[i - 1].date, font, brushForRank, (float)(Width / 2 + Width/12), Height / 20 * (i * 2 + 1));
                 }
             }
             //初回起動時

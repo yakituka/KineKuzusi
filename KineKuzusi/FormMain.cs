@@ -20,6 +20,7 @@ namespace KineKuzusi
         public static GameMain gameMain;
         public static GameOver gameOver;
         private static Panel panel;
+        private System.Media.SoundPlayer player = null;
 
         //コンストラクタ
         public FormMain()
@@ -29,6 +30,8 @@ namespace KineKuzusi
             WindowState =  FormWindowState.Maximized;
             FormBorderStyle = FormBorderStyle.None;
             panel = panel1;
+            player = new System.Media.SoundPlayer(@"bgm.wav");
+            player.PlayLooping();
 
             CreateGameOver();
         }
