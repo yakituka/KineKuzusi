@@ -21,8 +21,9 @@ namespace KineKuzusi
         List<Score> scores = new List<Score>();
 
         bool once = true;
+        bool noControl = true;
         Tools tools = new Tools();
-        Timer timer = new Timer();
+        Timer noControlTimer = new Timer();
 
         SwipeGestureDetector swipeDetector = new SwipeGestureDetector();
 
@@ -50,6 +51,10 @@ namespace KineKuzusi
 
                 //ソートする
                 scores.Sort((a, b) => int.Parse(b.score) - int.Parse(a.score));
+
+                noControlTimer.Interval = 3000;
+                noControlTimer.Tick += new EventHandler(no_control_evnet);
+                noControlTimer.Enabled = true;
             }
 
             try
@@ -74,11 +79,17 @@ namespace KineKuzusi
 
         private void swipe_event(string obj)
         {
-            if (once)
+            if (once && !noControl)
             {
                 once = false;
                 Dispose();
             }
+        }
+
+        private void no_control_evnet(object sender, EventArgs e)
+        {
+            noControlTimer.Enabled = false;
+            noControl = false;
         }
 
         private void StartKinect(KinectSensor kinect)
