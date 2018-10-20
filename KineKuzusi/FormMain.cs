@@ -30,9 +30,8 @@ namespace KineKuzusi
             FormBorderStyle = FormBorderStyle.None;
             panel = panel1;
             if (!File.Exists(@"Scores.csv")) {
-                MessageBox.Show("エラー : Scores.csvが存在しないよ!");
-                Close();
-            };
+                MessageBox.Show("エラー : Scores.csvが存在しなかった為、作成します。");
+            }
 
             CreateGameOver();
         }

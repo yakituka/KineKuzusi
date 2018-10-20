@@ -44,6 +44,7 @@ namespace KineKuzusi
                     }
                 }
 
+
                 //直前のスコアを代入
                 scoreLast = scores[scores.Count - 1];
                 //空文字が入っているデータは消す
@@ -56,6 +57,10 @@ namespace KineKuzusi
                 noControlTimer.Interval = 3000;
                 noControlTimer.Tick += new EventHandler(no_control_evnet);
                 noControlTimer.Enabled = true;
+            }
+            else
+            {
+                File.Create(@"Scores.csv");
             }
 
             try
@@ -140,7 +145,7 @@ namespace KineKuzusi
         {
             Font font = new Font("HGSSoeiKakupoptai Regular", 70);
             //2度目のゲーム
-            if (File.Exists(@"Scores.csv"))
+            if (File.Exists(@"Scores.csv") && scores.Count > 0)
             {
                 e.Graphics.DrawString("あなたの得点", font, Brushes.CadetBlue, Width / 5, Height * 1 / 5);
 
