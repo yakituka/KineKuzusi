@@ -133,11 +133,13 @@ namespace KineKuzusi
                 e.Graphics.DrawString("あなたの得点", font, Brushes.CadetBlue, Width / 5, Height * 1 / 5);
                 e.Graphics.DrawString(scoreLast.score, font, Brushes.MediumVioletRed, Width * 15 / 50, Height * 2 / 5);
 
+                e.Graphics.DrawString("右手を左右に降って\nゲームスタート!", font, Brushes.DimGray, Width / 15, Height *7/10);
+
                 e.Graphics.DrawString("ランキング", font, Brushes.CadetBlue, (float)(Width / 1.5), Height / 20);
                 for (int i = 1; i <= (scores.Count < 8 ? scores.Count : 8); i++)
                 {
                     DateTime dateTime = DateTime.Now;
-                    e.Graphics.DrawString(scores[i-1].date+" "+i.ToString() + "位" + " : " + scores[i-1].score, font, Brushes.CadetBlue, (float)(Width / 2), Height / 20 * (i * 2 + 1));
+                    e.Graphics.DrawString(scores[i-1].date+" "+i.ToString() + "位" + " : " + scores[i-1].score, font, Brushes.CadetBlue, (float)(Width / 2 + Width/12), Height / 20 * (i * 2 + 1));
                 }
             }
             //初回起動時

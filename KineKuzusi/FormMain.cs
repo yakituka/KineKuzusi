@@ -30,6 +30,9 @@ namespace KineKuzusi
             FormBorderStyle = FormBorderStyle.None;
             panel = panel1;
             if (File.Exists(@"Scores.csv")) File.Delete(@"Scores.csv");
+            DateTime date = DateTime.Now;
+            string dateString = date.ToString("HH:mm");
+            File.AppendAllText(@"Scores.csv", "30000" + "A" + dateString + ",");
 
             CreateGameOver();
         }
