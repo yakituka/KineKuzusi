@@ -80,8 +80,7 @@ namespace KineKuzusi
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                Form f = FindForm();
-                if(f != null) f.Close();
+                Environment.Exit(0);
             }
         }
 

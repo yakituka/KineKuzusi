@@ -34,33 +34,34 @@ namespace KineKuzusi
             if (File.Exists(@"Scores.csv"))
             {
                 //スコアリストに代入
-                foreach(string r in File.ReadAllText(@"Scores.csv").Split(','))
+                try
                 {
-                    String[] split = r.Split('A');
-                    if (split.Length == 2)
+                    foreach (string r in File.ReadAllText(@"Scores.csv").Split(','))
                     {
-                        Score score = new Score(split[0], split[1]);
-                        scores.Add(score);
+                        String[] split = r.Split('A');
+                        if (split.Length == 2)
+                        {
+                            Score score = new Score(split[0], split[1]);
+                            scores.Add(score);
+                        }
                     }
+
+                    //直前のスコアを代入
+                    scoreLast = scores[scores.Count - 1];
+                    //空文字が入っているデータは消す
+                    scores.RemoveAll(s => s.score == "" || s.date == "");
+
+                    //ソートする
+                    scores.Sort((a, b) => int.Parse(b.score) - int.Parse(a.score));
+
+                    //操作禁止タイマーの発動
+                    noControlTimer.Interval = 3000;
+                    noControlTimer.Tick += new EventHandler(no_control_evnet);
+                    noControlTimer.Enabled = true;
                 }
-
-
-                //直前のスコアを代入
-                scoreLast = scores[scores.Count - 1];
-                //空文字が入っているデータは消す
-                scores.RemoveAll(s => s.score == "" || s.date == "");
-
-                //ソートする
-                scores.Sort((a, b) => int.Parse(b.score) - int.Parse(a.score));
-
-                //操作禁止タイマーの発動
-                noControlTimer.Interval = 3000;
-                noControlTimer.Tick += new EventHandler(no_control_evnet);
-                noControlTimer.Enabled = true;
-            }
-            else
-            {
-                File.Create(@"Scores.csv");
+                catch (Exception ex)
+                {
+                }
             }
 
             try
@@ -71,13 +72,11 @@ namespace KineKuzusi
                 }
 
                 StartKinect(KinectSensor.KinectSensors[0]);
-
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                Form f = FindForm();
-                if (f != null) f.Close();
+                //Environment.Exit(0);
             }
 
             swipeDetector.OnGestureDetected += new Action<string>(swipe_event);
@@ -164,7 +163,7 @@ namespace KineKuzusi
             //初回起動時
             else
             {
-                e.Graphics.DrawString("右手を横に振ってください", font, Brushes.DimGray, Width/4, Height/2);
+                e.Graphics.DrawString("右手を横に振って\nゲームスタート!", font, Brushes.DimGray, Width/4, Height/2);
             }
         }
 

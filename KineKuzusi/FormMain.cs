@@ -29,9 +29,6 @@ namespace KineKuzusi
             WindowState =  FormWindowState.Maximized;
             FormBorderStyle = FormBorderStyle.None;
             panel = panel1;
-            if (!File.Exists(@"Scores.csv")) {
-                MessageBox.Show("エラー : Scores.csvが存在しなかった為、作成します。");
-            }
 
             CreateGameOver();
         }
